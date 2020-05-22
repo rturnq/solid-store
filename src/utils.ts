@@ -24,23 +24,25 @@ export function combineStores<T extends AnyStore>(storeMap: MappedStore<T>): T {
   );
 }
 
-export function createAsyncEffect(
-  fn: () => Promise<void>
+export function createAsyncEffect<T>(
+  fn: () => Promise<T>
 ): [() => boolean, () => Error | undefined] {
-  const [error, load] = createResource<any | undefined>();
+  const [error, load] = createResource<Error | undefined>();
 
   let isPending = () => false;
   createEffect(() => {
     if (!sample(isPending)) {
       isPending = load(
-        fn().catch((err) => {
-          if (err instanceof Error) {
-            return err;
-          } else if (typeof err !== 'object') {
-            return new Error(err);
-          }
-          return new Error('Unknown error');
-        })
+        fn()
+          .then(() => undefined)
+          .catch((err: any) => {
+            if (err instanceof Error) {
+              return err;
+            } else if (typeof err !== 'object') {
+              return new Error(err);
+            }
+            return new Error('Unknown error');
+          })
       );
     }
   });
