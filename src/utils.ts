@@ -1,4 +1,4 @@
-import { createResource, createEffect } from 'solid-js';
+import { createResource, createEffect, sample } from 'solid-js';
 import { Store, MappedStore, AnyStore } from './types';
 
 export function createStore<S extends object, A extends object>(
@@ -31,16 +31,18 @@ export function createAsyncEffect(
 
   let isPending = () => false;
   createEffect(() => {
-    isPending = load(
-      fn().catch((err) => {
-        if (err instanceof Error) {
-          return err;
-        } else if (typeof err !== 'object') {
-          return new Error(err);
-        }
-        return new Error('Unknown error');
-      })
-    );
+    if (!sample(isPending)) {
+      isPending = load(
+        fn().catch((err) => {
+          if (err instanceof Error) {
+            return err;
+          } else if (typeof err !== 'object') {
+            return new Error(err);
+          }
+          return new Error('Unknown error');
+        })
+      );
+    }
   });
 
   return [isPending, error];
