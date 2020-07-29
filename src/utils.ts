@@ -28,11 +28,11 @@ export function createAsyncEffect<T>(
   fn: () => Promise<T>
 ): [() => boolean, () => Error | undefined] {
   const [error, load] = createResource<Error | undefined>();
+  const isPending = () => error.loading;
 
-  let isPending = () => false;
   createEffect(() => {
     if (!sample(isPending)) {
-      isPending = load(
+      load(
         fn()
           .then(() => undefined)
           .catch((err: any) => {
