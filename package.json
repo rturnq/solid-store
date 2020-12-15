@@ -1,6 +1,6 @@
 {
   "name": "@rturnq/solid-store",
-  "version": "0.2.0-beta01",
+  "version": "0.2.0",
   "description": "A store pattern for solid-js",
   "author": "Ryan Turnquist",
   "license": "MIT",

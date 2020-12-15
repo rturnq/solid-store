@@ -146,12 +146,12 @@ type FooBarBazStore = CombinedStore<FooBarBazStoreMap>;
 combineStores(map: FooBarBazStoreMap): FooBarBazStore
 ```
 
-### createAsyncEffect
-This is a useful way of calling async actions within your components and get access to the status and any error result. Creates an effect which runs an async function and returns two signals, wheter the function is pending and the other with any error produced.
+### createAsyncComputed
+This is a useful way of calling async actions within your components and get access to the status and any error result. Creates an computation which runs an async function and returns two signals: whether the function is pending and the other with any error produced.
 
 ```typescript
-export function createAsyncEffect(
-  fn: () => Promise<void>
+export function createAsyncComputed<T>(
+  fn: () => Promise<T>
 ): [() => boolean, () => Error | undefined]
 ```
 
@@ -160,7 +160,7 @@ Example
 ```tsx
 () => {
   const [state, actions] = useStore();
-  const [isLoading, error] = createAsyncEffect(() =>actions.foo.loadFoos());
+  const [isLoading, error] = createAsyncComputed(() =>actions.foo.loadFoos());
 
   return (
     <Switch>
