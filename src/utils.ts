@@ -1,4 +1,4 @@
-import { createResource, createEffect, sample } from 'solid-js';
+import { untrack, createComputed, createSignal, batch } from 'solid-js';
 import { Store, MappedStore, AnyStore } from './types';
 
 export function createStore<S extends object, A extends object>(
@@ -24,26 +24,40 @@ export function combineStores<T extends AnyStore>(storeMap: MappedStore<T>): T {
   );
 }
 
-export function createAsyncEffect<T>(
+function normalizeError(err: unknown) {
+  if (err == null) {
+    return undefined;
+  } else if (err instanceof Error) {
+    return err;
+  } else if (typeof err === 'object') {
+    const errorObject = err as any;
+    if ('message' in errorObject) {
+      return new Error('' + errorObject.message);
+    }
+  } else {
+    return new Error('' + err);
+  }
+  return new Error('Unknown error');
+}
+
+export function createAsyncComputed<T>(
   fn: () => Promise<T>
 ): [() => boolean, () => Error | undefined] {
-  const [error, load] = createResource<Error | undefined>();
+  const [error, setError] = createSignal<Error | undefined>();
+  const [isPending, setIsPending] = createSignal(false);
 
-  let isPending = () => false;
-  createEffect(() => {
-    if (!sample(isPending)) {
-      isPending = load(
-        fn()
-          .then(() => undefined)
-          .catch((err: any) => {
-            if (err instanceof Error) {
-              return err;
-            } else if (typeof err !== 'object') {
-              return new Error(err);
-            }
-            return new Error('Unknown error');
-          })
-      );
+  createComputed(() => {
+    if (!untrack(isPending)) {
+      setIsPending(true);
+      fn()
+        .then(() => undefined)
+        .catch(normalizeError)
+        .then((err) => {
+          batch(() => {
+            setError(err);
+            setIsPending(false);
+          });
+        });
     }
   });
 
